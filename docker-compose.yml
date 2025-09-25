@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./timer-backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - timer-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/timer"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./timer-frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - timer-network
+    environment:
+      - BACKEND_URL=http://backend:8080
+    restart: unless-stopped
+
+networks:
+  timer-network:
+    driver: bridge
